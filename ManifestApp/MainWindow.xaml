@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="ManifestApp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:ManifestApp"
+    xmlns:pages="using:ManifestApp.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="OpenSteam App"
+    mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootChrome">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0.4,1">
+                <GradientStop Color="#FF15102C" Offset="0" />
+                <GradientStop Color="#FF0E0B1C" Offset="0.5" />
+                <GradientStop Color="#FF0A0816" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar
+            x:Name="AppTitleBar"
+            Title="OpenSteam App"
+            BackRequested="TitleBar_BackRequested"
+            IsBackButtonVisible="{x:Bind NavFrame.CanGoBack, Mode=OneWay}"
+            IsPaneToggleButtonVisible="True"
+            PaneToggleRequested="TitleBar_PaneToggleRequested">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/OpenSteamMark.png" />
+            </TitleBar.IconSource>
+        </TitleBar>
+
+        <!-- Wrap so first-run onboarding can stay visible while NavigationView is collapsed (NavFrame lives inside NavView). -->
+        <Grid Grid.Row="1">
+            <NavigationView
+                x:Name="NavView"
+                PaneDisplayMode="Left"
+                IsBackButtonVisible="Collapsed"
+                IsPaneToggleButtonVisible="False"
+                IsSettingsVisible="True"
+                OpenPaneLength="272"
+                SelectionChanged="NavView_SelectionChanged">
+                <NavigationView.MenuItems>
+                    <NavigationViewItem Content="Search" IsSelected="True" Tag="home">
+                        <NavigationViewItem.Icon>
+                            <FontIcon FontSize="16" Glyph="&#xE721;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem Content="Library" Tag="manifest-library">
+                        <NavigationViewItem.Icon>
+                            <FontIcon FontSize="16" Glyph="&#xE8F1;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem Content="Requests" Tag="game-requests">
+                        <NavigationViewItem.Icon>
+                            <FontIcon FontSize="16" Glyph="&#xE715;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem Content="Online Fixes" Tag="online-fixes">
+                        <NavigationViewItem.Icon>
+                            <FontIcon FontSize="16" Glyph="&#xE774;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </NavigationView.MenuItems>
+
+                <NavigationView.PaneFooter>
+                    <Border Padding="12,0,12,16">
+                        <Border
+                            x:Name="UserStatsCard"
+                            CornerRadius="10"
+                            Padding="12,10"
+                            BorderThickness="1"
+                            BorderBrush="#20FFFFFF"
+                            Background="#0CFFFFFF"
+                            Visibility="Collapsed">
+                            <StackPanel Spacing="3">
+                                <!-- Discord icon row -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <!-- &#xE8BD; = Chat/message glyph, tinted Discord blurple -->
+                                    <FontIcon Glyph="&#xE8BD;" FontSize="13"
+                                              Foreground="#FF5865F2"
+                                              VerticalAlignment="Center" />
+                                    <TextBlock x:Name="PaneUserName"
+                                               FontSize="12" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <!-- "via Discord" subtitle — hidden when name is unavailable -->
+                                <TextBlock x:Name="PaneDiscordTag"
+                                           FontSize="10"
+                                           Foreground="#FF5865F2"
+                                           Margin="21,0,0,0" />
+                                <TextBlock x:Name="PanePlanText"
+                                           FontSize="11"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Margin="21,0,0,0" />
+                                <TextBlock x:Name="PaneCreditsText"
+                                           FontSize="11"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Margin="21,0,0,0" />
+
+                                <StackPanel x:Name="KeyStatusRow"
+                                            Orientation="Horizontal" Spacing="6"
+                                            Margin="21,3,0,0"
+                                            Visibility="Collapsed">
+                                    <Ellipse x:Name="KeyStatusDot"
+                                             Width="7" Height="7"
+                                             VerticalAlignment="Center" />
+                                    <TextBlock x:Name="KeyStatusText"
+                                               FontSize="10" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               CharacterSpacing="60" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Border>
+                </NavigationView.PaneFooter>
+
+                <Frame x:Name="NavFrame" />
+            </NavigationView>
+
+            <Grid
+                x:Name="OnboardingHost"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                Visibility="Collapsed">
+                <Frame x:Name="OnboardingFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            </Grid>
+
+            <InfoBar
+                x:Name="GlobalUpdateNotification"
+                Title="Update Available!"
+                Severity="Success"
+                IsOpen="False"
+                IsClosable="True"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="24"
+                CornerRadius="8"
+                MaxWidth="350">
+                <InfoBar.ActionButton>
+                    <Button Content="Install Now" Click="GlobalUpdateNotification_InstallClick" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <!-- Admin lockout overlay -->
+            <Grid x:Name="LockoutHost" Visibility="Collapsed" IsHitTestVisible="True" Canvas.ZIndex="999">
+                <pages:LockoutOverlay />
+            </Grid>
+
+            <!-- API pairing gate — blocks the app until Discord pairing completes -->
+            <Grid x:Name="PairingHost" Visibility="Collapsed" IsHitTestVisible="True" Canvas.ZIndex="998">
+                <pages:PairingGateOverlay x:Name="PairingGate" />
+            </Grid>
+        </Grid>
+
+        <!-- Startup splash; spans the title bar and content area so the animation is centered in the full window. -->
+        <Grid
+            x:Name="SplashHost"
+            Grid.RowSpan="2"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Canvas.ZIndex="900"
+            IsHitTestVisible="True">
+            <pages:SplashOverlay
+                x:Name="Splash"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+        </Grid>
+    </Grid>
+</Window>

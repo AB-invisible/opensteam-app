@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="ManifestApp.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ManifestApp">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- ========================================================================
+                 Theme overrides — repaint the Windows accent palette in OpenSteam violet.
+                 Affects accent buttons, NavView selection, hyperlinks, focus visuals,
+                 ToggleSwitch, Slider thumb, ProgressBar, GridView "Tracked" badge, etc.
+                 ======================================================================== -->
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- Dark theme (key "Default") -->
+                <ResourceDictionary x:Key="Default">
+                    <Color x:Key="SystemAccentColor">#FF6E45FF</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FF7B55FF</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FF8B65FF</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FFA285FF</Color>
+                    <Color x:Key="SystemAccentColorDark1">#FF5D3BCC</Color>
+                    <Color x:Key="SystemAccentColorDark2">#FF4827B2</Color>
+                    <Color x:Key="SystemAccentColorDark3">#FF36198C</Color>
+
+                    <!-- Replace the flat dark-gray page background with a deep purple-tinted black
+                         so the OpenSteam brand carries beyond the hero card. -->
+                    <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="#FF0E0B1C" />
+
+                    <!-- Replace the flat accent-button surface with the OpenSteam gradient. -->
+                    <LinearGradientBrush x:Key="AccentFillColorDefaultBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF8B65FF" Offset="0" />
+                        <GradientStop Color="#FF5B7FFF" Offset="1" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="AccentFillColorSecondaryBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#E68B65FF" Offset="0" />
+                        <GradientStop Color="#E65B7FFF" Offset="1" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="AccentFillColorTertiaryBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#CC7B55FF" Offset="0" />
+                        <GradientStop Color="#CC4F73E6" Offset="1" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+
+                <!-- Light theme -->
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="SystemAccentColor">#FF6E45FF</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FF8B65FF</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FFA285FF</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FFB8A1FF</Color>
+                    <Color x:Key="SystemAccentColorDark1">#FF5D3BCC</Color>
+                    <Color x:Key="SystemAccentColorDark2">#FF4827B2</Color>
+                    <Color x:Key="SystemAccentColorDark3">#FF36198C</Color>
+
+                    <LinearGradientBrush x:Key="AccentFillColorDefaultBrush" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF6E45FF" Offset="0" />
+                        <GradientStop Color="#FF4F73E6" Offset="1" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="HighContrast" />
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- ========================================================================
+                 Brand resources — explicit OpenSteam-styled surfaces, used in pages where
+                 we want the hero look (gradient text, hero card backgrounds, etc.).
+                 ======================================================================== -->
+            <LinearGradientBrush x:Key="OpenSteamAccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF8B65FF" Offset="0" />
+                <GradientStop Color="#FF5B7FFF" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="OpenSteamHeroSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF120E20" Offset="0" />
+                <GradientStop Color="#FF1A0E2C" Offset="0.5" />
+                <GradientStop Color="#FF0F0E1F" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="OpenSteamHeroStrokeBrush" Color="#1FB8C8FF" />
+            <SolidColorBrush x:Key="OpenSteamSubtleAccentBackgroundBrush" Color="#1F6E45FF" />
+            <SolidColorBrush x:Key="OpenSteamSubtleAccentStrokeBrush" Color="#506E45FF" />
+            <SolidColorBrush x:Key="OpenSteamSuccessBrush" Color="#FF7DD3A0" />
+            <SolidColorBrush x:Key="OpenSteamSecondaryTextBrush" Color="#C0EDEDF5" />
+            <SolidColorBrush x:Key="OpenSteamMutedTextBrush" Color="#80AFAFC4" />
+
+            <!-- Existing converters -->
+            <local:BoolToVisibilityConverter x:Key="ManifestBoolToVisibility" />
+            <local:NonEmptyStringToVisibilityConverter x:Key="ManifestNonEmptyToVisibility" />
+
+            <!-- Existing layout tokens -->
+            <CornerRadius x:Key="ManifestCardCornerRadius">10</CornerRadius>
+            <Thickness x:Key="ManifestCardPadding">18,14,18,16</Thickness>
+            <Thickness x:Key="ManifestInsetPadding">22,14,22,20</Thickness>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

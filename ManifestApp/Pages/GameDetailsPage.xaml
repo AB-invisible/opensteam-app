@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="ManifestApp.Pages.GameDetailsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    NavigationCacheMode="Disabled"
+    KeyboardAcceleratorPlacementMode="Hidden"
+    mc:Ignorable="d">
+
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="Escape_Invoked" />
+        <KeyboardAccelerator Key="Left"   Invoked="PrevMedia_Invoked" />
+        <KeyboardAccelerator Key="Right"  Invoked="NextMedia_Invoked" />
+        <KeyboardAccelerator Key="Space"  Invoked="ToggleVideo_Invoked" />
+    </Page.KeyboardAccelerators>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+            <Grid Padding="{StaticResource ManifestInsetPadding}">
+                <StackPanel Spacing="20" MaxWidth="1240" HorizontalAlignment="Stretch">
+
+                    <!-- ──────── BACK + STATUS ──────── -->
+                    <HyperlinkButton Click="Back_Click" Padding="0,4,8,4" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                            <TextBlock Text="Back to results" FontSize="12" />
+                        </StackPanel>
+                    </HyperlinkButton>
+
+                    <!-- ──────── HERO: header image + title overlay ──────── -->
+                    <Border CornerRadius="20" Height="280"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource OpenSteamHeroStrokeBrush}"
+                            Background="{StaticResource OpenSteamHeroSurfaceBrush}">
+                        <Grid>
+                            <Image x:Name="HeroBackgroundImage"
+                                   Stretch="UniformToFill"
+                                   Opacity="0.55"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch" />
+
+                            <!-- Dark overlay so title stays readable -->
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#80120E20" Offset="0" />
+                                        <GradientStop Color="#FF120E20" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+
+                            <StackPanel Padding="32,24,32,24"
+                                        VerticalAlignment="Bottom"
+                                        Spacing="10">
+
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border CornerRadius="0" Padding="10,4,14,4"
+                                            BorderThickness="1"
+                                            BorderBrush="{StaticResource OpenSteamSubtleAccentStrokeBrush}"
+                                            Background="{StaticResource OpenSteamSubtleAccentBackgroundBrush}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Ellipse x:Name="TrackedDot" Width="6" Height="6"
+                                                     Fill="{StaticResource OpenSteamSuccessBrush}" />
+                                            <TextBlock x:Name="TrackedPillText"
+                                                       Text="TRACKED"
+                                                       FontSize="10" FontWeight="SemiBold"
+                                                       CharacterSpacing="120"
+                                                       Foreground="#FFB8C8FF" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border x:Name="ComingSoonPill"
+                                            CornerRadius="0" Padding="10,4,14,4"
+                                            BorderThickness="1"
+                                            BorderBrush="#80FFB85B"
+                                            Background="#33FFB85B"
+                                            Visibility="Collapsed">
+                                        <TextBlock Text="COMING SOON"
+                                                   FontSize="10" FontWeight="SemiBold"
+                                                   CharacterSpacing="120"
+                                                   Foreground="#FFFFD18A" />
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBlock x:Name="GameTitleText"
+                                           FontSize="38" FontWeight="Bold"
+                                           LineHeight="44"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="2"
+                                           Foreground="White" />
+
+                                <StackPanel Orientation="Horizontal" Spacing="14">
+                                    <TextBlock x:Name="AppIdText"
+                                               FontSize="13"
+                                               Foreground="#C0EDEDF5" />
+                                    <TextBlock x:Name="ReleaseText"
+                                               FontSize="13"
+                                               Foreground="#C0EDEDF5"
+                                               Visibility="Collapsed" />
+                                    <TextBlock x:Name="DeveloperLineText"
+                                               FontSize="13"
+                                               Foreground="#C0EDEDF5"
+                                               TextTrimming="CharacterEllipsis"
+                                               Visibility="Collapsed" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- ──────── PRIMARY ACTION BAR ──────── -->
+                    <Border Padding="14,12"
+                            CornerRadius="14"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button x:Name="InstallButton"
+                                        MinHeight="40" MinWidth="170"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Click="Install_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE896;" FontSize="14" />
+                                        <TextBlock Text="Install manifests" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="RemoveButton"
+                                        MinHeight="40" MinWidth="130"
+                                        Click="Remove_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                        <TextBlock Text="Remove files" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="FixAvailableButton"
+                                        MinHeight="40" MinWidth="150"
+                                        Visibility="Collapsed"
+                                        Click="FixAvailable_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE895;" FontSize="14" />
+                                        <TextBlock Text="Fix available" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="LaunchSteamButton"
+                                        MinHeight="40" MinWidth="150"
+                                        Click="LaunchSteam_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE768;" FontSize="14" />
+                                        <TextBlock Text="Launch in Steam" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button x:Name="RestartSteamButton"
+                                        MinHeight="40"
+                                        Click="RestartSteam_Click"
+                                        ToolTipService.ToolTip="Restart the Steam client to reload manifests">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                                        <TextBlock Text="Restart Steam" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Install progress / status -->
+                    <StackPanel x:Name="InstallProgressPanel" Spacing="6" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <ProgressRing x:Name="InstallProgressRing"
+                                          Width="20" Height="20" IsActive="False"
+                                          Visibility="Collapsed" />
+                            <ProgressBar x:Name="InstallProgressBar"
+                                         Width="240" Maximum="100" Value="0"
+                                         Visibility="Collapsed" />
+                            <TextBlock x:Name="InstallProgressText"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <InfoBar x:Name="StatusInfoBar"
+                             IsClosable="True" IsOpen="False"
+                             CornerRadius="8" />
+
+                    <!-- ──────── BODY: media (left) + info (right) ──────── -->
+                    <Grid ColumnSpacing="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="320" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Media column -->
+                        <StackPanel Grid.Column="0" Spacing="10">
+                            <Border CornerRadius="12"
+                                    BorderThickness="1"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                <Grid Height="430"
+                                      ManipulationMode="TranslateX"
+                                      ManipulationCompleted="Media_ManipulationCompleted"
+                                      PointerWheelChanged="Media_PointerWheelChanged">
+                                    <Grid x:Name="MediaViewerGrid">
+                                        <!-- Filled in code-behind: either a MediaPlayerElement or an Image -->
+                                        <TextBlock x:Name="MediaPlaceholder"
+                                                   Text="Loading media…"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <!-- Prev arrow -->
+                                    <Button x:Name="PrevMediaButton"
+                                            Click="PrevMedia_Click"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Margin="8,0,0,0"
+                                            MinWidth="44" MinHeight="44"
+                                            Padding="0"
+                                            CornerRadius="22"
+                                            Background="#99000000"
+                                            BorderBrush="#40FFFFFF"
+                                            BorderThickness="1"
+                                            AllowFocusOnInteraction="False"
+                                            IsTabStop="False"
+                                            ToolTipService.ToolTip="Previous (←)"
+                                            Visibility="Collapsed">
+                                        <FontIcon Glyph="&#xE76B;" FontSize="14"
+                                                  Foreground="White" />
+                                    </Button>
+
+                                    <!-- Next arrow -->
+                                    <Button x:Name="NextMediaButton"
+                                            Click="NextMedia_Click"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,8,0"
+                                            MinWidth="44" MinHeight="44"
+                                            Padding="0"
+                                            CornerRadius="22"
+                                            Background="#99000000"
+                                            BorderBrush="#40FFFFFF"
+                                            BorderThickness="1"
+                                            AllowFocusOnInteraction="False"
+                                            IsTabStop="False"
+                                            ToolTipService.ToolTip="Next (→)"
+                                            Visibility="Collapsed">
+                                        <FontIcon Glyph="&#xE76C;" FontSize="14"
+                                                  Foreground="White" />
+                                    </Button>
+
+                                    <!-- "Open in browser" fallback for when video won't play inline -->
+                                    <Button x:Name="OpenInBrowserButton"
+                                            Click="OpenMediaInBrowser_Click"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,8,0"
+                                            Padding="10,5"
+                                            CornerRadius="6"
+                                            Background="#AA000000"
+                                            BorderBrush="#40FFFFFF"
+                                            BorderThickness="1"
+                                            AllowFocusOnInteraction="False"
+                                            IsTabStop="False"
+                                            ToolTipService.ToolTip="Open this video in your browser"
+                                            Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE8A7;" FontSize="11" Foreground="White" />
+                                            <TextBlock Text="Open in browser" FontSize="11" Foreground="White" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Counter "3 / 12" -->
+                                    <Border x:Name="MediaCounterBadge"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Margin="8,8,0,0"
+                                            Padding="8,3,10,4"
+                                            CornerRadius="6"
+                                            Background="#AA000000"
+                                            BorderBrush="#40FFFFFF"
+                                            BorderThickness="1"
+                                            Visibility="Collapsed">
+                                        <TextBlock x:Name="MediaCounterText"
+                                                   FontSize="11"
+                                                   Foreground="White" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <ScrollViewer x:Name="ThumbStripScroller"
+                                          HorizontalScrollMode="Enabled"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollMode="Disabled"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="ThumbStrip">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </StackPanel>
+
+                        <!-- Info column -->
+                        <Border Grid.Column="1"
+                                CornerRadius="14" Padding="18,16"
+                                BorderThickness="1"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <StackPanel Spacing="14">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="ABOUT THIS GAME"
+                                               FontSize="11" FontWeight="SemiBold"
+                                               CharacterSpacing="200"
+                                               Foreground="{StaticResource OpenSteamAccentGradientBrush}" />
+                                </StackPanel>
+
+                                <TextBlock x:Name="ShortDescText"
+                                           FontSize="13" LineHeight="20"
+                                           TextWrapping="WrapWholeWords"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                <StackPanel x:Name="MetaPanel" Spacing="8" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- ──────── DETAILED DESCRIPTION ──────── -->
+                    <Border x:Name="AboutPanel"
+                            CornerRadius="14" Padding="20,18"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            Visibility="Collapsed">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="DESCRIPTION"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       CharacterSpacing="200"
+                                       Foreground="{StaticResource OpenSteamAccentGradientBrush}" />
+                            <TextBlock x:Name="AboutLongText"
+                                       FontSize="13" LineHeight="22"
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ──────── STEAM CLIENT + FOLDERS ──────── -->
+                    <Border CornerRadius="14" Padding="20,16"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="STEAM CLIENT &amp; FILES"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           CharacterSpacing="200"
+                                           Foreground="{StaticResource OpenSteamAccentGradientBrush}" />
+                                <TextBlock Text="Open the folders that OpenSteam writes into, or hand the game off to Steam."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button MinHeight="36" Click="OpenPluginFolder_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE8B7;" FontSize="13" />
+                                        <TextBlock Text="Open stplug-in (.lua)" />
+                                    </StackPanel>
+                                </Button>
+                                <Button MinHeight="36" Click="OpenDepotFolder_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE8B7;" FontSize="13" />
+                                        <TextBlock Text="Open depotcache" />
+                                    </StackPanel>
+                                </Button>
+                                <Button MinHeight="36" Click="SteamInstall_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE896;" FontSize="13" />
+                                        <TextBlock Text="Install via Steam" />
+                                    </StackPanel>
+                                </Button>
+                                <Button MinHeight="36" Click="SteamUninstall_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="13" />
+                                        <TextBlock Text="Uninstall via Steam" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <Border x:Name="TrackedFilesBlock"
+                                    CornerRadius="10" Padding="14,12"
+                                    BorderThickness="1"
+                                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    Visibility="Collapsed">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Tracked files on disk"
+                                               FontSize="11" FontWeight="SemiBold"
+                                               CharacterSpacing="120"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="TrackedFilesSummary"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ──────── LIGHTBOX OVERLAY ──────── -->
+        <!-- Fills the whole page above all content. Toggled by clicking a screenshot. -->
+        <Grid x:Name="LightboxHost"
+              Background="#EE000000"
+              Visibility="Collapsed"
+              Canvas.ZIndex="100"
+              ManipulationMode="TranslateX"
+              ManipulationCompleted="Media_ManipulationCompleted"
+              PointerWheelChanged="Media_PointerWheelChanged"
+              Tapped="LightboxHost_Tapped">
+            <Image x:Name="LightboxImage"
+                   Stretch="Uniform"
+                   Margin="80,40,80,80"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch" />
+
+            <!-- Prev (left) in lightbox -->
+            <Button x:Name="LightboxPrevButton"
+                    Click="LightboxPrev_Click"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Margin="16,0,0,0"
+                    MinWidth="48" MinHeight="48"
+                    Padding="0"
+                    CornerRadius="24"
+                    Background="#99000000"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1"
+                    AllowFocusOnInteraction="False"
+                    IsTabStop="False"
+                    ToolTipService.ToolTip="Previous (←)">
+                <FontIcon Glyph="&#xE76B;" FontSize="16" Foreground="White" />
+            </Button>
+
+            <!-- Next (right) in lightbox -->
+            <Button x:Name="LightboxNextButton"
+                    Click="LightboxNext_Click"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,16,0"
+                    MinWidth="48" MinHeight="48"
+                    Padding="0"
+                    CornerRadius="24"
+                    Background="#99000000"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1"
+                    AllowFocusOnInteraction="False"
+                    IsTabStop="False"
+                    ToolTipService.ToolTip="Next (→)">
+                <FontIcon Glyph="&#xE76C;" FontSize="16" Foreground="White" />
+            </Button>
+
+            <Button x:Name="LightboxCloseButton"
+                    Click="LightboxClose_Click"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,20,20,0"
+                    MinWidth="40" MinHeight="40"
+                    Padding="0"
+                    CornerRadius="20"
+                    Background="#99000000"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1"
+                    AllowFocusOnInteraction="False"
+                    IsTabStop="False"
+                    ToolTipService.ToolTip="Close (Esc)">
+                <FontIcon Glyph="&#xE711;" FontSize="14" Foreground="White" />
+            </Button>
+
+            <TextBlock x:Name="LightboxCaption"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Bottom"
+                       Margin="0,0,0,28"
+                       FontSize="12"
+                       Foreground="#80FFFFFF"
+                       Text="←  →  to navigate · click anywhere or press Esc to close" />
+        </Grid>
+    </Grid>
+</Page>

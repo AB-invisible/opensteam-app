@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test
+        run: |
+          dotnet restore ManifestApp.slnx
+          dotnet test ManifestApp.Core.Tests/ManifestApp.Core.Tests.csproj -c Release -p:Platform=x64
+
+      - name: Publish
+        run: |
+          dotnet publish ManifestApp/ManifestApp.csproj -c Release -p:Platform=x64 --self-contained true -p:PublishSingleFile=true -p:WindowsAppSDKSelfContained=true
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ManifestApp/bin/x64/Release/net10.0-windows10.0.26100.0/win-x64/publish/OpenSteamApp.exe
+            ManifestApp/bin/x64/Release/net10.0-windows10.0.26100.0/win-x64/publish/Assets/AppIcon.ico
+            ManifestApp/bin/x64/Release/net10.0-windows10.0.26100.0/win-x64/publish/Assets/OpenSteamAppLogo.png
+            ManifestApp/bin/x64/Release/net10.0-windows10.0.26100.0/win-x64/publish/Assets/OpenSteamMark.png
+          generate_release_notes: true
