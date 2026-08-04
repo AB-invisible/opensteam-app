@@ -1,6 +1,6 @@
 # OpenSteam App
 
-A Windows desktop app for searching the Steam Store, managing Steam game manifests, and installing them via the [OpenSteam](https://opensteam.lol) API — built with WinUI 3 (Windows App SDK, unpackaged).
+A Windows desktop app for searching the Steam Store, managing Steam game manifests, and installing them via the [OpenSteam](https://manifest-web-ylio.onrender.com) API — built with WinUI 3 (Windows App SDK, unpackaged).
 
 ## Install (recommended)
 
@@ -23,7 +23,7 @@ powershell -ExecutionPolicy Bypass -File .\download.ps1
 - Windows 10 version 1809 or later
 - [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (included in self-contained publish)
 - Steam installed
-- An [OpenSteam](https://opensteam.lol) account and API key
+- An [OpenSteam](https://manifest-web-ylio.onrender.com) account and API key
 
 ## Build from source
 
@@ -41,7 +41,7 @@ Output: `ManifestApp\bin\Release\net10.0-windows10.0.26100.0\win-x64\publish\Ope
 | Setting | Description |
 |---------|-------------|
 | API key | From your OpenSteam dashboard — required for manifest downloads |
-| OpenSteam API base URL | Leave blank to use `https://opensteam.lol` |
+| OpenSteam API base URL | Leave blank to use `https://manifest-web-ylio.onrender.com` |
 
 Settings are stored in `%LOCALAPPDATA%\OpenSteamApp\settings.json`.
 
