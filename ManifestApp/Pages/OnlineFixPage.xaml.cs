@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using ManifestApp.Core;
 using ManifestApp.Core.Models;
 using ManifestApp.Services;
@@ -212,7 +213,132 @@ public sealed partial class OnlineFixPage : Page
         DownloadProgressPanel.Visibility = Visibility.Collapsed;
         StatusInfoBar.IsOpen = false;
         DownloadButton.IsEnabled = true;
+        InstallButton.IsEnabled = sel.Source.SteamAppId is > 0;
         DetailPanel.Visibility = Visibility.Visible;
+        _ = EnsureInstallTargetAsync(sel);
+    }
+
+    private async Task EnsureInstallTargetAsync(OnlineFixRowVm row)
+    {
+        if (row.Source.SteamAppId is > 0)
+        {
+            _dispatcher.TryEnqueue(() => InstallButton.IsEnabled = true);
+            return;
+        }
+
+        try
+        {
+            var hits = await TypedApp.Svcs.SteamStoreSearch
+                .SearchAppsAsync(row.DisplayTitle, CancellationToken.None)
+                .ConfigureAwait(false);
+            var hit = hits.FirstOrDefault(h =>
+                h.Name.Contains(row.DisplayTitle, StringComparison.OrdinalIgnoreCase) ||
+                row.DisplayTitle.Contains(h.Name, StringComparison.OrdinalIgnoreCase))
+                ?? hits.FirstOrDefault();
+            if (hit == null) return;
+
+            row.Source.SteamAppId = hit.AppId;
+            _dispatcher.TryEnqueue(() => InstallButton.IsEnabled = true);
+        }
+        catch
+        {
+            // Install stays disabled when Steam lookup fails.
+        }
+    }
+
+    private async void InstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        var sel = FixesGrid.SelectedItem as OnlineFixRowVm;
+        if (sel == null || sel.Source.SteamAppId is not { } appId || appId == 0) return;
+
+        if (!OpenSteamApiKeyStore.TryRetrieve(out var apiKey) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            ShowStatus(InfoBarSeverity.Error, "Authentication Error", "No API key configured. Check Settings.");
+            return;
+        }
+
+        DownloadButton.IsEnabled = false;
+        InstallButton.IsEnabled = false;
+        RefreshButton.IsEnabled = false;
+        FixesGrid.IsEnabled = false;
+        SearchBox.IsEnabled = false;
+        DownloadProgressPanel.Visibility = Visibility.Visible;
+        DownloadProgressBar.IsIndeterminate = true;
+        DownloadProgressText.Text = "Checking game install folder…";
+        StatusInfoBar.IsOpen = false;
+
+        try
+        {
+            var monitor = new SteamGameMonitor(TypedApp.Svcs.SettingsStore);
+            var gameInstallDir = monitor.TryGetInstalledGamePath(appId);
+            if (string.IsNullOrEmpty(gameInstallDir))
+            {
+                var dlg = new ContentDialog
+                {
+                    Title = "Game not installed",
+                    Content = $"{sel.DisplayTitle} is not installed in Steam yet.\n\nInstall it via Steam first, then press Install to Game again.",
+                    PrimaryButtonText = "Install via Steam",
+                    CloseButtonText = "Cancel",
+                    DefaultButton = ContentDialogButton.Primary,
+                    XamlRoot = XamlRoot!,
+                };
+                if (await DialogService.ShowAsync(dlg) != ContentDialogResult.Primary)
+                    return;
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = $"steam://install/{appId}",
+                    UseShellExecute = true,
+                });
+                ShowStatus(
+                    InfoBarSeverity.Informational,
+                    "Install the game in Steam",
+                    "After Steam finishes, return here and click Install to Game again.");
+                return;
+            }
+
+            DownloadProgressBar.IsIndeterminate = false;
+            DownloadProgressBar.Value = 0;
+            DownloadProgressText.Text = $"Downloading fix for {sel.DisplayTitle}…";
+
+            var progress = new Progress<double>(pct =>
+            {
+                _dispatcher.TryEnqueue(() =>
+                {
+                    DownloadProgressBar.Value = pct;
+                    DownloadProgressText.Text = $"Downloading… {pct:0}%";
+                });
+            });
+
+            using var ms = new MemoryStream();
+            await TypedApp.Svcs.OpenSteamApi
+                .DownloadOnlineFixAsync(apiKey.Trim(), sel.Source.Name, ms, CancellationToken.None, progress)
+                .ConfigureAwait(true);
+            ms.Position = 0;
+
+            DownloadProgressBar.IsIndeterminate = true;
+            DownloadProgressText.Text = "Extracting fix to game folder…";
+            OnlineFixService.ExtractArchive(ms, gameInstallDir);
+
+            ShowStatus(
+                InfoBarSeverity.Success,
+                "Install Complete",
+                $"Online fix installed for {sel.DisplayTitle}.");
+        }
+        catch (Exception ex)
+        {
+            ShowStatus(InfoBarSeverity.Error, "Install Failed", ex.Message);
+        }
+        finally
+        {
+            DownloadButton.IsEnabled = true;
+            InstallButton.IsEnabled = sel.Source.SteamAppId is > 0;
+            RefreshButton.IsEnabled = true;
+            FixesGrid.IsEnabled = true;
+            SearchBox.IsEnabled = true;
+            DownloadProgressPanel.Visibility = Visibility.Collapsed;
+            DownloadProgressBar.IsIndeterminate = false;
+        }
     }
 
     private async void DownloadButton_Click(object sender, RoutedEventArgs e)

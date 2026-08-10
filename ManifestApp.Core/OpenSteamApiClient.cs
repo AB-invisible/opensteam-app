@@ -488,6 +488,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                 string? version = null;
                 string? fileName = null;
                 string? imageUrl = null;
+                uint? steamAppId = null;
 
                 if (item.ValueKind == JsonValueKind.Object)
                 {
@@ -511,6 +512,8 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                     if (item.TryGetProperty("fileName", out var fnProp)) fileName = fnProp.GetString();
                     if (item.TryGetProperty("imageUrl", out var imgProp)) imageUrl = imgProp.GetString();
                     if (item.TryGetProperty("headerImageUrl", out var hdrProp)) imageUrl ??= hdrProp.GetString();
+                    if (item.TryGetProperty("steamAppId", out var sidProp) && sidProp.TryGetUInt32(out var sid))
+                        steamAppId = sid;
                 }
                 else if (item.ValueKind == JsonValueKind.String)
                 {
@@ -529,6 +532,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                         Version = version,
                         FileName = fileName,
                         ImageUrl = imageUrl,
+                        SteamAppId = steamAppId,
                     });
                 }
             }

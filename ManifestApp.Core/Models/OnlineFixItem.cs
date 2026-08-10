@@ -8,4 +8,6 @@ public sealed class OnlineFixItem
     public string? Version { get; set; }
     public string? FileName { get; set; }
     public string? ImageUrl { get; set; }
+
+    public uint? SteamAppId { get; set; }
 }
