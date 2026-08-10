@@ -487,6 +487,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                 string? size = null;
                 string? version = null;
                 string? fileName = null;
+                string? imageUrl = null;
 
                 if (item.ValueKind == JsonValueKind.Object)
                 {
@@ -508,6 +509,8 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                     if (item.TryGetProperty("fileSize", out var fsProp)) size = fsProp.GetString() ?? size;
                     if (item.TryGetProperty("version", out var vProp)) version = vProp.GetString();
                     if (item.TryGetProperty("fileName", out var fnProp)) fileName = fnProp.GetString();
+                    if (item.TryGetProperty("imageUrl", out var imgProp)) imageUrl = imgProp.GetString();
+                    if (item.TryGetProperty("headerImageUrl", out var hdrProp)) imageUrl ??= hdrProp.GetString();
                 }
                 else if (item.ValueKind == JsonValueKind.String)
                 {
@@ -519,10 +522,13 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                     list.Add(new OnlineFixItem
                     {
                         Name = name,
-                        Title = string.IsNullOrWhiteSpace(title) ? name : title,
+                        Title = string.IsNullOrWhiteSpace(title)
+                            ? OnlineFixDisplayHelper.ParseDisplayTitle(name, fileName)
+                            : title,
                         Size = size,
                         Version = version,
-                        FileName = fileName
+                        FileName = fileName,
+                        ImageUrl = imageUrl,
                     });
                 }
             }

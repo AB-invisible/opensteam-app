@@ -71,6 +71,12 @@ public sealed partial class OnlineFixPage : Page
                 .OrderBy(vm => vm.DisplayTitle, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
+            foreach (var row in _allFixes)
+            {
+                if (!string.IsNullOrWhiteSpace(row.Source.ImageUrl))
+                    row.AttachRemoteThumbnail(row.Source.ImageUrl!);
+            }
+
             ApplyFilter();
             _ = EnrichThumbnailsAsync(_allFixes, ct);
         }
@@ -94,7 +100,7 @@ public sealed partial class OnlineFixPage : Page
         var thumbCt = _thumbCts.Token;
 
         using var gate = new SemaphoreSlim(4);
-        var tasks = rows.Select(async row =>
+        var tasks = rows.Where(row => row.ThumbUri == OnlineFixRowVm.PlaceholderUri).Select(async row =>
         {
             await gate.WaitAsync(thumbCt).ConfigureAwait(false);
             try
