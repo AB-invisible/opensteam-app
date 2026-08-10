@@ -127,59 +127,54 @@ public sealed class PairingClient(HttpClient http, SettingsStore settingsStore)
 
 
     public async Task<PairingStatusResult> PollStatusAsync(string code, CancellationToken cancellationToken = default)
-
     {
-
         var machineId = GetOrCreateMachineId();
+        string? lastError = null;
 
-        var url =
-
-            $"{OpenSteamApiEndpoint.ResolvePrimary(settingsStore)}/api/v2/pairing/status?code={Uri.EscapeDataString(code)}&machineId={Uri.EscapeDataString(machineId)}";
-
-
-
-        try
-
+        foreach (var baseUrl in OpenSteamApiEndpoint.GetCandidates(settingsStore))
         {
-
-            using var rsp = await http.GetAsync(url, cancellationToken).ConfigureAwait(false);
-
-            var body = await rsp.Content.ReadFromJsonAsync<PairingStatusResponse>(cancellationToken: cancellationToken)
-
-                .ConfigureAwait(false);
-
-            var status = body?.Status?.Trim().ToLowerInvariant() ?? "invalid";
-
-
-
-            return status switch
-
+            try
             {
+                var url =
+                    $"{baseUrl}/api/v2/pairing/status?code={Uri.EscapeDataString(code)}&machineId={Uri.EscapeDataString(machineId)}";
 
-                "ready" when !string.IsNullOrWhiteSpace(body?.ApiKey) =>
+                using var rsp = await http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                var body = await rsp.Content.ReadFromJsonAsync<PairingStatusResponse>(cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
 
-                    PairingStatusResult.Ready(body!.ApiKey!.Trim()),
+                if (rsp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    lastError = "Pairing status API not found — server may need a rebuild.";
+                    continue;
+                }
 
-                "pending" => PairingStatusResult.Pending(),
+                if (!rsp.IsSuccessStatusCode)
+                {
+                    lastError = body?.Error ?? $"Pairing status failed ({(int)rsp.StatusCode}).";
+                    continue;
+                }
 
-                "expired" => PairingStatusResult.Expired(),
+                var status = body?.Status?.Trim().ToLowerInvariant() ?? "invalid";
 
-                "revoked" => PairingStatusResult.Fail("This key was revoked."),
+                OpenSteamApiEndpoint.PersistPreferredBaseUrl(baseUrl);
 
-                _ => PairingStatusResult.Fail(body?.Error ?? "Invalid pairing code."),
-
-            };
-
+                return status switch
+                {
+                    "ready" when !string.IsNullOrWhiteSpace(body?.ApiKey) =>
+                        PairingStatusResult.Ready(body!.ApiKey!.Trim()),
+                    "pending" => PairingStatusResult.Pending(),
+                    "expired" => PairingStatusResult.Expired(),
+                    "revoked" => PairingStatusResult.Fail("This key was revoked."),
+                    _ => PairingStatusResult.Fail(body?.Error ?? "Invalid pairing code."),
+                };
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+            }
         }
 
-        catch (Exception ex)
-
-        {
-
-            return PairingStatusResult.Fail(ex.Message);
-
-        }
-
+        return PairingStatusResult.Fail(lastError ?? "Could not reach OpenSteam.");
     }
 
 

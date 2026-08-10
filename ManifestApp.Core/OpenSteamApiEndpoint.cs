@@ -48,6 +48,11 @@ public static class OpenSteamApiEndpoint
 
     public static string ResolvePrimary(SettingsStore settingsStore)
     {
+        var preferred = ReadOptionalFile(Path.Combine(AppPaths.LocalRoot, "api-base-url.txt"));
+        var normalizedPreferred = NormalizeBaseUrl(preferred);
+        if (normalizedPreferred is not null)
+            return normalizedPreferred;
+
         var candidates = GetCandidates(settingsStore);
         return candidates.Count > 0 ? candidates[0] : ProductionApiBaseUrl;
     }
