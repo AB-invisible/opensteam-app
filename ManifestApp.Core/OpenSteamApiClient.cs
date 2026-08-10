@@ -439,7 +439,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
             if (element.ValueKind == JsonValueKind.Object)
             {
                 // 1. Check preferred array properties at this level
-                var preferredKeys = new[] { "fixes", "data", "items", "results", "list" };
+                var preferredKeys = new[] { "games", "fixes", "data", "items", "results", "list" };
                 foreach (var key in preferredKeys)
                 {
                     if (element.TryGetProperty(key, out var prop))
