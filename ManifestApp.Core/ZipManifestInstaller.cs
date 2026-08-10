@@ -15,6 +15,8 @@ public sealed class ZipManifestInstaller(InstalledManifestStore store, SteamPath
     {
         ArgumentNullException.ThrowIfNull(zipBytes);
 
+        zipBytes = ManifestLuaCleaner.CleanManifestZip(zipBytes);
+
         using var zipHash = SHA256.Create();
         var hashHex = Convert.ToHexString(zipHash.ComputeHash(zipBytes)).ToLowerInvariant();
 
