@@ -173,7 +173,7 @@
                     </GridView.ItemContainerStyle>
 
                     <GridView.ItemTemplate>
-                        <DataTemplate x:DataType="models:OnlineFixItem">
+                        <DataTemplate x:DataType="local:OnlineFixRowVm">
                             <Border
                                 Width="210"
                                 Padding="12"
@@ -182,30 +182,32 @@
                                 BorderThickness="1"
                                 CornerRadius="{StaticResource ManifestCardCornerRadius}">
                                 <StackPanel Spacing="8">
-                                    <Border Height="60" CornerRadius="6" Background="#1500F2FE">
-                                        <FontIcon Glyph="&#xE774;" FontSize="28" Foreground="#FF00F2FE" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <Border Height="98" CornerRadius="6" Background="#1500F2FE">
+                                        <Image Stretch="UniformToFill"
+                                               HorizontalAlignment="Stretch"
+                                               VerticalAlignment="Stretch">
+                                            <Image.Source>
+                                                <BitmapImage UriSource="{x:Bind ThumbUri, Mode=OneWay}"
+                                                             DecodePixelType="Logical"
+                                                             DecodePixelWidth="210" />
+                                            </Image.Source>
+                                        </Image>
                                     </Border>
                                     
-                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind Title}"
+                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind DisplayTitle}"
                                                MaxLines="2" TextTrimming="CharacterEllipsis"
                                                TextWrapping="WrapWholeWords" FontSize="13" Height="38"/>
                                     
                                     <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2,0,0">
                                         <TextBlock FontSize="10"
                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                   Text="{x:Bind Name}" 
-                                                   TextTrimming="CharacterEllipsis"
-                                                   MaxWidth="110"/>
+                                                   Text="{x:Bind Size}"
+                                                   Visibility="{x:Bind Size, Converter={StaticResource ManifestNonEmptyToVisibility}}"/>
                                         <TextBlock FontSize="10"
                                                    Foreground="#FF4FACFE"
                                                    Text="{x:Bind Version}" 
                                                    Visibility="{x:Bind Version, Converter={StaticResource ManifestNonEmptyToVisibility}}"/>
                                     </StackPanel>
-
-                                    <TextBlock FontSize="10"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                               Text="{x:Bind Size}"
-                                               Visibility="{x:Bind Size, Converter={StaticResource ManifestNonEmptyToVisibility}}" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

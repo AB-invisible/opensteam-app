@@ -13,8 +13,9 @@ namespace ManifestApp.Pages;
 public sealed partial class OnlineFixPage : Page
 {
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
-    private List<OnlineFixItem>? _allFixes;
+    private List<OnlineFixRowVm>? _allFixes;
     private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _thumbCts;
 
     private App TypedApp => (App)Application.Current;
 
@@ -33,12 +34,14 @@ public sealed partial class OnlineFixPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         _cts?.Cancel();
+        _thumbCts?.Cancel();
         base.OnNavigatedFrom(e);
     }
 
     private async Task LoadFixesAsync()
     {
         _cts?.Cancel();
+        _thumbCts?.Cancel();
         _cts = new CancellationTokenSource();
         var ct = _cts.Token;
 
@@ -61,8 +64,15 @@ public sealed partial class OnlineFixPage : Page
             var list = await TypedApp.Svcs.OpenSteamApi.GetOnlineFixesAsync(apiKey.Trim(), ct).ConfigureAwait(true);
             if (ct.IsCancellationRequested) return;
 
-            _allFixes = list;
+            _allFixes = list
+                .Select(item => new OnlineFixRowVm(
+                    item,
+                    OnlineFixDisplayHelper.ParseDisplayTitle(item.Title, item.FileName)))
+                .OrderBy(vm => vm.DisplayTitle, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
             ApplyFilter();
+            _ = EnrichThumbnailsAsync(_allFixes, ct);
         }
         catch (Exception ex)
         {
@@ -77,6 +87,59 @@ public sealed partial class OnlineFixPage : Page
         }
     }
 
+    private async Task EnrichThumbnailsAsync(IReadOnlyList<OnlineFixRowVm> rows, CancellationToken ct)
+    {
+        _thumbCts?.Cancel();
+        _thumbCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var thumbCt = _thumbCts.Token;
+
+        using var gate = new SemaphoreSlim(4);
+        var tasks = rows.Select(async row =>
+        {
+            await gate.WaitAsync(thumbCt).ConfigureAwait(false);
+            try
+            {
+                var hits = await TypedApp.Svcs.SteamStoreSearch
+                    .SearchAppsAsync(row.DisplayTitle, thumbCt)
+                    .ConfigureAwait(false);
+                if (thumbCt.IsCancellationRequested || hits.Count == 0)
+                    return;
+
+                var hit = hits.FirstOrDefault(h =>
+                    h.Name.Contains(row.DisplayTitle, StringComparison.OrdinalIgnoreCase) ||
+                    row.DisplayTitle.Contains(h.Name, StringComparison.OrdinalIgnoreCase))
+                    ?? hits[0];
+
+                var imageUrl = !string.IsNullOrWhiteSpace(hit.TinyImageHttpsUrl)
+                    ? hit.TinyImageHttpsUrl!
+                    : OnlineFixDisplayHelper.HeaderImageUrl(hit.AppId);
+
+                _dispatcher.TryEnqueue(() => row.AttachRemoteThumbnail(imageUrl));
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+            catch
+            {
+                // keep placeholder on lookup failure
+            }
+            finally
+            {
+                gate.Release();
+            }
+        });
+
+        try
+        {
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
+        }
+    }
+
     private void ApplyFilter()
     {
         if (_allFixes == null || _allFixes.Count == 0)
@@ -88,19 +151,20 @@ public sealed partial class OnlineFixPage : Page
         }
 
         var query = SearchBox.Text?.Trim() ?? "";
-        var filtered = _allFixes;
+        IEnumerable<OnlineFixRowVm> filtered = _allFixes;
 
         if (!string.IsNullOrEmpty(query))
         {
             filtered = _allFixes.Where(f =>
-                f.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                f.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-            ).ToList();
+                f.DisplayTitle.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                f.Source.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                f.Source.Title.Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
-        FixesGrid.ItemsSource = filtered;
+        var view = new ObservableCollection<OnlineFixRowVm>(filtered);
+        FixesGrid.ItemsSource = view;
 
-        if (filtered.Count == 0)
+        if (!view.Any())
         {
             NoFixesText.Text = $"No matching fixes found for \"{query}\".";
             NoFixesText.Visibility = Visibility.Visible;
@@ -125,15 +189,15 @@ public sealed partial class OnlineFixPage : Page
 
     private void FixesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var sel = FixesGrid.SelectedItem as OnlineFixItem;
+        var sel = FixesGrid.SelectedItem as OnlineFixRowVm;
         if (sel == null)
         {
             DetailPanel.Visibility = Visibility.Collapsed;
             return;
         }
 
-        DetailTitle.Text = sel.Title;
-        DetailName.Text = $"Name: {sel.Name}";
+        DetailTitle.Text = sel.DisplayTitle;
+        DetailName.Text = sel.Source.FileName ?? sel.Source.Name;
         DetailVersionText.Text = !string.IsNullOrEmpty(sel.Version) ? sel.Version : "N/A";
         DetailSizeText.Text = !string.IsNullOrEmpty(sel.Size) ? sel.Size : "N/A";
 
@@ -145,7 +209,7 @@ public sealed partial class OnlineFixPage : Page
 
     private async void DownloadButton_Click(object sender, RoutedEventArgs e)
     {
-        var sel = FixesGrid.SelectedItem as OnlineFixItem;
+        var sel = FixesGrid.SelectedItem as OnlineFixRowVm;
         if (sel == null) return;
 
         if (!OpenSteamApiKeyStore.TryRetrieve(out var apiKey) || string.IsNullOrWhiteSpace(apiKey))
@@ -154,12 +218,12 @@ public sealed partial class OnlineFixPage : Page
             return;
         }
 
-        // Configure save file picker dynamically based on the server's extension (often .rar instead of .zip)
         var ext = ".zip";
         var filterLabel = "ZIP Archive";
-        if (!string.IsNullOrWhiteSpace(sel.FileName))
+        var fileName = sel.Source.FileName;
+        if (!string.IsNullOrWhiteSpace(fileName))
         {
-            var detectedExt = System.IO.Path.GetExtension(sel.FileName);
+            var detectedExt = Path.GetExtension(fileName);
             if (!string.IsNullOrWhiteSpace(detectedExt))
             {
                 ext = detectedExt.ToLowerInvariant();
@@ -170,18 +234,16 @@ public sealed partial class OnlineFixPage : Page
         var picker = new FileSavePicker
         {
             SuggestedStartLocation = PickerLocationId.Downloads,
-            SuggestedFileName = !string.IsNullOrWhiteSpace(sel.FileName) ? sel.FileName : $"{sel.Name}{ext}"
+            SuggestedFileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : $"{sel.Source.Name}{ext}"
         };
         picker.FileTypeChoices.Add(filterLabel, new List<string> { ext });
 
-        // Bind Window Handle to picker (required in WinUI 3)
         var hwnd = WindowInterop.GetWindowHandle(TypedApp.MainShell);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         var file = await picker.PickSaveFileAsync();
         if (file == null) return;
 
-        // Start Download
         DownloadButton.IsEnabled = false;
         RefreshButton.IsEnabled = false;
         FixesGrid.IsEnabled = false;
@@ -204,11 +266,11 @@ public sealed partial class OnlineFixPage : Page
         try
         {
             using var fileStream = await file.OpenStreamForWriteAsync();
-            fileStream.SetLength(0); // Truncate existing file if any
+            fileStream.SetLength(0);
 
             await TypedApp.Svcs.OpenSteamApi.DownloadOnlineFixAsync(
                 apiKey.Trim(),
-                sel.Name,
+                sel.Source.Name,
                 fileStream,
                 downloadCts.Token,
                 progress
