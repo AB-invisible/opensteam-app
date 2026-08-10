@@ -9,7 +9,7 @@ namespace ManifestApp.Core;
 /// </summary>
 public static class ManifestLuaCleaner
 {
-    public const string SiteUrl = "https://opensteam.lol";
+    public const string SiteUrl = OpenSteamApiEndpoint.ProductionApiBaseUrl;
 
     private static readonly string[] BannedFragments =
     [
