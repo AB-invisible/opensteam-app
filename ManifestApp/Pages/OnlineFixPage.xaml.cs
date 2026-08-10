@@ -65,9 +65,11 @@ public sealed partial class OnlineFixPage : Page
             if (ct.IsCancellationRequested) return;
 
             _allFixes = list
-                .Select(item => new OnlineFixRowVm(
-                    item,
-                    OnlineFixDisplayHelper.ParseDisplayTitle(item.Title, item.FileName)))
+                .Select(item =>
+                {
+                    var title = OnlineFixDisplayHelper.ParseDisplayTitle(item.Name, item.FileName);
+                    return new OnlineFixRowVm(item, title);
+                })
                 .OrderBy(vm => vm.DisplayTitle, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 

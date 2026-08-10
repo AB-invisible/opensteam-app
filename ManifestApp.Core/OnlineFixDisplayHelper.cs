@@ -3,34 +3,21 @@ namespace ManifestApp.Core;
 /// <summary>Turns raw OnlineFix catalog labels into user-facing game titles.</summary>
 public static class OnlineFixDisplayHelper
 {
-    private const string OnlineRuMarker = " по сети";
-
     public static string ParseDisplayTitle(string? rawName, string? fileName = null)
     {
-        var source = (rawName ?? string.Empty).Trim();
-        if (source.Length == 0 && !string.IsNullOrWhiteSpace(fileName))
-            source = ParseFromFileName(fileName!);
-
-        if (source.Length == 0)
-            return "Unknown Game";
-
-        var onlineIdx = source.IndexOf(OnlineRuMarker, StringComparison.OrdinalIgnoreCase);
-        if (onlineIdx > 0)
-            return source[..onlineIdx].Trim();
-
-        var dashIdx = source.IndexOf(" - ", StringComparison.Ordinal);
-        if (dashIdx > 0 &&
-            source.Contains("Fix Repair", StringComparison.OrdinalIgnoreCase))
-            return source[..dashIdx].Trim();
-
         if (!string.IsNullOrWhiteSpace(fileName))
         {
-            var fromFile = ParseFromFileName(fileName!);
-            if (fromFile.Length > 0 && !LooksLikeFixBoilerplate(fromFile))
-                return fromFile;
+            var fromFile = ParseFromFileName(fileName);
+            var strippedFile = StripOnlineFixLabel(fromFile);
+            if (!string.IsNullOrWhiteSpace(strippedFile))
+                return strippedFile;
         }
 
-        return StripFixSuffix(source);
+        var fromRaw = StripOnlineFixLabel(rawName ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(fromRaw))
+            return fromRaw;
+
+        return string.IsNullOrWhiteSpace(rawName) ? "Unknown Game" : rawName.Trim();
     }
 
     public static string HeaderImageUrl(uint appId) =>
@@ -53,12 +40,24 @@ public static class OnlineFixDisplayHelper
             .Trim();
     }
 
-    private static bool LooksLikeFixBoilerplate(string value) =>
-        value.Contains("Fix Repair", StringComparison.OrdinalIgnoreCase);
-
-    private static string StripFixSuffix(string value)
+    private static string StripOnlineFixLabel(string value)
     {
-        var trimmed = value.Trim();
+        var text = value.Trim();
+        if (text.Length == 0)
+            return string.Empty;
+
+        var onlineIdx = text.IndexOf(" по сет", StringComparison.OrdinalIgnoreCase);
+        if (onlineIdx > 0)
+            text = text[..onlineIdx].Trim();
+
+        var onlineEnIdx = text.IndexOf(" Online", StringComparison.OrdinalIgnoreCase);
+        if (onlineEnIdx > 0)
+            text = text[..onlineEnIdx].Trim();
+
+        var dashIdx = text.IndexOf(" - ", StringComparison.Ordinal);
+        if (dashIdx > 0 && text.Contains("Fix Repair", StringComparison.OrdinalIgnoreCase))
+            text = text[..dashIdx].Trim();
+
         ReadOnlySpan<string> suffixes =
         [
             " Fix Repair Steam Generic",
@@ -72,14 +71,14 @@ public static class OnlineFixDisplayHelper
             changed = false;
             foreach (var suffix in suffixes)
             {
-                if (!trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                if (!text.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                trimmed = trimmed[..^suffix.Length].Trim();
+                text = text[..^suffix.Length].Trim();
                 changed = true;
             }
         }
 
-        return trimmed.Length > 0 ? trimmed : value.Trim();
+        return text;
     }
 }
