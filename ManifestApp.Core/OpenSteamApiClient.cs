@@ -488,6 +488,8 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                 string? version = null;
                 string? fileName = null;
                 string? imageUrl = null;
+                string? headerImageUrl = null;
+                string? downloadName = null;
                 uint? steamAppId = null;
 
                 if (item.ValueKind == JsonValueKind.Object)
@@ -511,7 +513,9 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                     if (item.TryGetProperty("version", out var vProp)) version = vProp.GetString();
                     if (item.TryGetProperty("fileName", out var fnProp)) fileName = fnProp.GetString();
                     if (item.TryGetProperty("imageUrl", out var imgProp)) imageUrl = imgProp.GetString();
-                    if (item.TryGetProperty("headerImageUrl", out var hdrProp)) imageUrl ??= hdrProp.GetString();
+                    if (item.TryGetProperty("headerImageUrl", out var hdrProp)) headerImageUrl = hdrProp.GetString();
+                    if (item.TryGetProperty("downloadName", out var dnProp2)) downloadName = dnProp2.GetString();
+                    if (string.IsNullOrWhiteSpace(headerImageUrl)) headerImageUrl = imageUrl;
                     if (item.TryGetProperty("steamAppId", out var sidProp)
                         && sidProp.ValueKind == JsonValueKind.Number
                         && sidProp.TryGetUInt32(out var sid))
@@ -534,6 +538,8 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                         Version = version,
                         FileName = fileName,
                         ImageUrl = imageUrl,
+                        HeaderImageUrl = headerImageUrl,
+                        DownloadName = downloadName ?? name,
                         SteamAppId = steamAppId,
                     });
                 }
@@ -552,15 +558,35 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("API key is missing.");
 
-        var url = $"{GetApiRoot().TrimEnd('/')}/api/v2/onlinefix/download/{Uri.EscapeDataString(fixName)}";
+        var url = $"{GetApiRoot().TrimEnd('/')}/api/v2/onlinefix/download/{Uri.EscapeDataString(fixName.Trim())}";
         
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey.Trim());
-        req.Headers.Accept.ParseAdd("application/zip, application/octet-stream");
+        req.Headers.Accept.ParseAdd("application/zip");
+        req.Headers.Accept.ParseAdd("application/octet-stream");
+        req.Headers.Accept.ParseAdd("application/x-rar-compressed");
 
         using var rsp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
-        rsp.EnsureSuccessStatusCode();
+
+        if (!rsp.IsSuccessStatusCode)
+        {
+            var body = await rsp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = body;
+            try
+            {
+                using var errDoc = JsonDocument.Parse(body);
+                if (errDoc.RootElement.TryGetProperty("error", out var errProp))
+                    detail = errProp.GetString() ?? body;
+            }
+            catch
+            {
+                // keep raw body
+            }
+
+            throw new HttpRequestException(
+                $"OnlineFix download failed ({(int)rsp.StatusCode}): {detail}".Trim());
+        }
 
         var total = rsp.Content.Headers.ContentLength ?? -1L;
         await using var src = await rsp.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);

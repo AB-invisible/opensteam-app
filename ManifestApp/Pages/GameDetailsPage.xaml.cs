@@ -1019,7 +1019,7 @@ public sealed partial class GameDetailsPage : Page
 
         using var ms = new MemoryStream();
         await TypedApp.Svcs.OpenSteamApi
-            .DownloadOnlineFixAsync(apiKey, fix.Name, ms, CancellationToken.None, downloadProgress)
+            .DownloadOnlineFixAsync(apiKey, fix.ResolveDownloadName(), ms, CancellationToken.None, downloadProgress)
             .ConfigureAwait(true);
         ms.Position = 0;
 

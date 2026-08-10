@@ -76,8 +76,11 @@ public sealed partial class OnlineFixPage : Page
 
             foreach (var row in _allFixes)
             {
-                if (!string.IsNullOrWhiteSpace(row.Source.ImageUrl))
-                    row.AttachRemoteThumbnail(row.Source.ImageUrl!);
+                var thumb = !string.IsNullOrWhiteSpace(row.Source.HeaderImageUrl)
+                    ? row.Source.HeaderImageUrl
+                    : row.Source.ImageUrl;
+                if (!string.IsNullOrWhiteSpace(thumb))
+                    row.AttachRemoteThumbnail(thumb!);
             }
 
             ApplyFilter();
@@ -123,7 +126,11 @@ public sealed partial class OnlineFixPage : Page
                     ? hit.TinyImageHttpsUrl!
                     : OnlineFixDisplayHelper.HeaderImageUrl(hit.AppId);
 
-                _dispatcher.TryEnqueue(() => row.AttachRemoteThumbnail(imageUrl));
+                _dispatcher.TryEnqueue(() =>
+                {
+                    row.AttachRemoteThumbnail(imageUrl);
+                    row.Source.SteamAppId ??= hit.AppId;
+                });
             }
             catch (OperationCanceledException)
             {
@@ -312,7 +319,7 @@ public sealed partial class OnlineFixPage : Page
 
             using var ms = new MemoryStream();
             await TypedApp.Svcs.OpenSteamApi
-                .DownloadOnlineFixAsync(apiKey.Trim(), sel.Source.Name, ms, CancellationToken.None, progress)
+                .DownloadOnlineFixAsync(apiKey.Trim(), sel.Source.ResolveDownloadName(), ms, CancellationToken.None, progress)
                 .ConfigureAwait(true);
             ms.Position = 0;
 
@@ -404,7 +411,7 @@ public sealed partial class OnlineFixPage : Page
 
             await TypedApp.Svcs.OpenSteamApi.DownloadOnlineFixAsync(
                 apiKey.Trim(),
-                sel.Source.Name,
+                sel.Source.ResolveDownloadName(),
                 fileStream,
                 downloadCts.Token,
                 progress
