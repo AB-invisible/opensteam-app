@@ -11,6 +11,9 @@ namespace ManifestApp.Core;
 /// </summary>
 public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsStore)
 {
+    private static List<OnlineFixItem>? _cachedOnlineFixes;
+    private static DateTimeOffset _cachedOnlineFixesAt;
+    private static readonly TimeSpan OnlineFixCacheTtl = TimeSpan.FromMinutes(15);
     public async Task<OpenSteamZipResult> DownloadGenerateZipAsync(string apiKey, uint appId,
         CancellationToken cancellationToken, IProgress<double>? progress = null)
     {
@@ -417,6 +420,12 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("API key is missing.");
 
+        if (_cachedOnlineFixes is not null &&
+            DateTimeOffset.UtcNow - _cachedOnlineFixesAt < OnlineFixCacheTtl)
+        {
+            return _cachedOnlineFixes;
+        }
+
         var url = $"{GetApiRoot().TrimEnd('/')}/api/v2/onlinefix/list";
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey.Trim());
@@ -549,6 +558,8 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
             }
         }
 
+        _cachedOnlineFixes = list;
+        _cachedOnlineFixesAt = DateTimeOffset.UtcNow;
         return list;
     }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.8 — Gen counter and rate limit fixes
+
+- Daily gen counter no longer increases when browsing games or refreshing Online Fixes
+- Online Fixes catalog is cached for 15 minutes (fewer API calls when opening game pages)
+- Server-side fixes for plan-based hourly limits (CUSTOM keys no longer stuck at 15/hour)
+
 ## 1.5.7 — Online Fixes install, posters, and download reliability
 
 - **Install to Game** on the Online Fixes page (extracts fix into Steam game folder)

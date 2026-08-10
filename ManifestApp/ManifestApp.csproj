@@ -27,11 +27,11 @@
     <PackageProjectUrl>https://opensteam.lol</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AB-invisible/opensteam-app</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <Version>1.5.7</Version>
-    <InformationalVersion>1.5.7</InformationalVersion>
+    <Version>1.5.8</Version>
+    <InformationalVersion>1.5.8</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <AssemblyVersion>1.5.7.0</AssemblyVersion>
-    <FileVersion>1.5.7.0</FileVersion>
+    <AssemblyVersion>1.5.8.0</AssemblyVersion>
+    <FileVersion>1.5.8.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
