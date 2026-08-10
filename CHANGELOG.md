@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.7 — Online Fixes install, posters, and download reliability
+
+- **Install to Game** on the Online Fixes page (extracts fix into Steam game folder)
+- English game titles and Steam CDN poster images for all users
+- Downloads use PeronDepot directly when the API redirect fails (fixes 404 install errors)
+- Fixed catalog crash when `steamAppId` is null in API responses
+
 ## 1.5.1 — Fix paired API keys rejected as invalid
 
 - Use v2 activate/stats endpoints with Bearer auth (legacy routes block new keys)

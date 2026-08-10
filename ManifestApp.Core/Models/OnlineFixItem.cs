@@ -13,9 +13,22 @@ public sealed class OnlineFixItem
 
     public string? DownloadName { get; set; }
 
+    public string? DirectDownloadUrl { get; set; }
+
     public uint? SteamAppId { get; set; }
 
     public string ResolveDownloadName() =>
         !string.IsNullOrWhiteSpace(DownloadName) ? DownloadName! :
         !string.IsNullOrWhiteSpace(Name) ? Name : Title;
+
+    public string? ResolveDirectDownloadUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(DirectDownloadUrl))
+            return DirectDownloadUrl.Trim();
+
+        if (string.IsNullOrWhiteSpace(FileName))
+            return null;
+
+        return $"https://api.perondepot.xyz/{Uri.EscapeDataString(FileName.Trim())}";
+    }
 }

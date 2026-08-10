@@ -490,6 +490,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                 string? imageUrl = null;
                 string? headerImageUrl = null;
                 string? downloadName = null;
+                string? directDownloadUrl = null;
                 uint? steamAppId = null;
 
                 if (item.ValueKind == JsonValueKind.Object)
@@ -515,6 +516,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                     if (item.TryGetProperty("imageUrl", out var imgProp)) imageUrl = imgProp.GetString();
                     if (item.TryGetProperty("headerImageUrl", out var hdrProp)) headerImageUrl = hdrProp.GetString();
                     if (item.TryGetProperty("downloadName", out var dnProp2)) downloadName = dnProp2.GetString();
+                    if (item.TryGetProperty("directDownloadUrl", out var ddProp)) directDownloadUrl = ddProp.GetString();
                     if (string.IsNullOrWhiteSpace(headerImageUrl)) headerImageUrl = imageUrl;
                     if (item.TryGetProperty("steamAppId", out var sidProp)
                         && sidProp.ValueKind == JsonValueKind.Number
@@ -540,6 +542,7 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                         ImageUrl = imageUrl,
                         HeaderImageUrl = headerImageUrl,
                         DownloadName = downloadName ?? name,
+                        DirectDownloadUrl = directDownloadUrl,
                         SteamAppId = steamAppId,
                     });
                 }
@@ -550,24 +553,70 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
     }
 
     /// <summary>
+    /// Downloads an OnlineFix archive (PeronDepot direct, with API fallback).
+    /// </summary>
+    public Task DownloadOnlineFixAsync(string apiKey, OnlineFixItem fix, Stream destinationStream,
+        CancellationToken cancellationToken, IProgress<double>? progress = null) =>
+        DownloadOnlineFixAsync(
+            apiKey,
+            fix.ResolveDownloadName(),
+            destinationStream,
+            cancellationToken,
+            progress,
+            fix.ResolveDirectDownloadUrl());
+
+    /// <summary>
     /// GET /api/v2/onlinefix/download/{name} — streams the direct zip download for a fix.
     /// </summary>
     public async Task DownloadOnlineFixAsync(string apiKey, string fixName, Stream destinationStream,
-        CancellationToken cancellationToken, IProgress<double>? progress = null)
+        CancellationToken cancellationToken, IProgress<double>? progress = null,
+        string? directDownloadUrl = null)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("API key is missing.");
 
-        var url = $"{GetApiRoot().TrimEnd('/')}/api/v2/onlinefix/download/{Uri.EscapeDataString(fixName.Trim())}";
-        
+        var directUrl = directDownloadUrl?.Trim();
+        if (!string.IsNullOrWhiteSpace(directUrl))
+        {
+            try
+            {
+                await DownloadDirectUrlAsync(directUrl, destinationStream, cancellationToken, progress)
+                    .ConfigureAwait(false);
+                return;
+            }
+            catch (Exception) when (destinationStream.CanSeek)
+            {
+                destinationStream.SetLength(0);
+            }
+        }
+
+        var url =
+            $"{GetApiRoot().TrimEnd('/')}/api/v2/onlinefix/download/{Uri.EscapeDataString(fixName.Trim())}?stream=1";
+
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey.Trim());
-        req.Headers.Accept.ParseAdd("application/zip");
         req.Headers.Accept.ParseAdd("application/octet-stream");
-        req.Headers.Accept.ParseAdd("application/x-rar-compressed");
 
-        using var rsp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var handler = new HttpClientHandler { AllowAutoRedirect = false };
+        using var downloadClient = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(20) };
+
+        using var rsp = await downloadClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
+
+        if (rsp.StatusCode == System.Net.HttpStatusCode.Redirect ||
+            rsp.StatusCode == System.Net.HttpStatusCode.MovedPermanently ||
+            rsp.StatusCode == System.Net.HttpStatusCode.Found)
+        {
+            if (!string.IsNullOrWhiteSpace(directUrl))
+            {
+                await DownloadDirectUrlAsync(directUrl, destinationStream, cancellationToken, progress)
+                    .ConfigureAwait(false);
+                return;
+            }
+
+            throw new HttpRequestException(
+                "OnlineFix download failed: server redirected to a missing file. Update OpenSteam and try again.");
+        }
 
         if (!rsp.IsSuccessStatusCode)
         {
@@ -584,10 +633,42 @@ public sealed class OpenSteamApiClient(HttpClient http, SettingsStore settingsSt
                 // keep raw body
             }
 
+            if (!string.IsNullOrWhiteSpace(directUrl))
+            {
+                await DownloadDirectUrlAsync(directUrl, destinationStream, cancellationToken, progress)
+                    .ConfigureAwait(false);
+                return;
+            }
+
             throw new HttpRequestException(
                 $"OnlineFix download failed ({(int)rsp.StatusCode}): {detail}".Trim());
         }
 
+        await CopyResponseStreamAsync(rsp, destinationStream, cancellationToken, progress).ConfigureAwait(false);
+    }
+
+    private async Task DownloadDirectUrlAsync(
+        string url,
+        Stream destinationStream,
+        CancellationToken cancellationToken,
+        IProgress<double>? progress)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.TryAddWithoutValidation("User-Agent", "OpenSteamApp/1.0");
+        req.Headers.Accept.ParseAdd("*/*");
+
+        using var rsp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            .ConfigureAwait(false);
+        rsp.EnsureSuccessStatusCode();
+        await CopyResponseStreamAsync(rsp, destinationStream, cancellationToken, progress).ConfigureAwait(false);
+    }
+
+    private static async Task CopyResponseStreamAsync(
+        HttpResponseMessage rsp,
+        Stream destinationStream,
+        CancellationToken cancellationToken,
+        IProgress<double>? progress)
+    {
         var total = rsp.Content.Headers.ContentLength ?? -1L;
         await using var src = await rsp.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 

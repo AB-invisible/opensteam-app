@@ -76,7 +76,10 @@ public sealed partial class OnlineFixPage : Page
 
             foreach (var row in _allFixes)
             {
-                var thumb = !string.IsNullOrWhiteSpace(row.Source.HeaderImageUrl)
+                string? thumb = row.Source.SteamAppId is { } appId && appId > 0
+                    ? OnlineFixDisplayHelper.HeaderImageUrl(appId)
+                    : null;
+                thumb ??= !string.IsNullOrWhiteSpace(row.Source.HeaderImageUrl)
                     ? row.Source.HeaderImageUrl
                     : row.Source.ImageUrl;
                 if (!string.IsNullOrWhiteSpace(thumb))
@@ -319,7 +322,7 @@ public sealed partial class OnlineFixPage : Page
 
             using var ms = new MemoryStream();
             await TypedApp.Svcs.OpenSteamApi
-                .DownloadOnlineFixAsync(apiKey.Trim(), sel.Source.ResolveDownloadName(), ms, CancellationToken.None, progress)
+                .DownloadOnlineFixAsync(apiKey.Trim(), sel.Source, ms, CancellationToken.None, progress)
                 .ConfigureAwait(true);
             ms.Position = 0;
 
@@ -411,7 +414,7 @@ public sealed partial class OnlineFixPage : Page
 
             await TypedApp.Svcs.OpenSteamApi.DownloadOnlineFixAsync(
                 apiKey.Trim(),
-                sel.Source.ResolveDownloadName(),
+                sel.Source,
                 fileStream,
                 downloadCts.Token,
                 progress
