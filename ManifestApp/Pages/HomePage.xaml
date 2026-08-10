@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="ManifestApp.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ManifestApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    NavigationCacheMode="Required"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Storyboard x:Name="StatusPulse" RepeatBehavior="Forever" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="StatusDot" Storyboard.TargetProperty="Opacity"
+                             From="0.45" To="1.0" Duration="0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollMode="Disabled"
+                  HorizontalScrollBarVisibility="Disabled"
+                  ZoomMode="Disabled">
+    <StackPanel Padding="{StaticResource ManifestInsetPadding}" Spacing="14">
+
+        <!-- ──────── HERO (full) ──────── -->
+        <Border
+                CornerRadius="20" Padding="24,20,24,20"
+                BorderThickness="1"
+                BorderBrush="{StaticResource OpenSteamHeroStrokeBrush}"
+                Background="{StaticResource OpenSteamHeroSurfaceBrush}">
+            <StackPanel Spacing="12">
+
+                <!-- Status pill -->
+                <Border CornerRadius="0" Padding="10,4,14,4"
+                        BorderThickness="1"
+                        BorderBrush="{StaticResource OpenSteamSubtleAccentStrokeBrush}"
+                        Background="{StaticResource OpenSteamSubtleAccentBackgroundBrush}"
+                        HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Ellipse x:Name="StatusDot" Width="6" Height="6" Fill="#FF8B65FF" />
+                        <TextBlock Text="MANIFEST HUB ACTIVE"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="#FFB8C8FF"
+                                   CharacterSpacing="120" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Eyebrow + gradient title -->
+                <StackPanel Spacing="0">
+                    <TextBlock Text="OPENSTEAM"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="#809FB7FF"
+                               CharacterSpacing="200" />
+                    <TextBlock FontSize="42" FontWeight="Bold"
+                               LineHeight="48" CharacterSpacing="-10"
+                               Text="MANIFEST HUB">
+                        <TextBlock.Foreground>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#FF8B65FF" Offset="0" />
+                                <GradientStop Color="#FF5B7FFF" Offset="1" />
+                            </LinearGradientBrush>
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Description -->
+                <TextBlock x:Name="HomeIntroText"
+                           Foreground="#C0EDEDF5"
+                           FontSize="12" LineHeight="18"
+                           MaxWidth="680"
+                           HorizontalAlignment="Left"
+                           TextWrapping="WrapWholeWords"
+                           Text="Click a game to open its page — screenshots, info, and manifest install live there." />
+
+                <!-- CTA -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Click="FocusSearch_Click"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Padding="16,8,16,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE721;" FontSize="12" />
+                            <TextBlock Text="SEARCH STORE" FontSize="12"
+                                       FontWeight="SemiBold" CharacterSpacing="60" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Stats row -->
+                <Grid ColumnSpacing="32" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="0">
+                        <TextBlock Text="50k+"
+                                   FontSize="26" FontWeight="Bold" LineHeight="30">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#FF8B65FF" Offset="0" />
+                                    <GradientStop Color="#FF5B7FFF" Offset="1" />
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="TITLES"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="#80AFAFC4"
+                                   CharacterSpacing="160" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="0">
+                        <TextBlock Text="STEAM"
+                                   FontSize="26" FontWeight="Bold" LineHeight="30">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#FF8B65FF" Offset="0" />
+                                    <GradientStop Color="#FF5B7FFF" Offset="1" />
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="STORE SYNC"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="#80AFAFC4"
+                                   CharacterSpacing="160" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="0">
+                        <TextBlock Text="OPENSTEAM"
+                                   FontSize="26" FontWeight="Bold" LineHeight="30">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#FF8B65FF" Offset="0" />
+                                    <GradientStop Color="#FF5B7FFF" Offset="1" />
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                        <TextBlock Text="POWERED BY"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="#80AFAFC4"
+                                   CharacterSpacing="160" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Feature cards row -->
+                <Grid ColumnSpacing="8" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" CornerRadius="10" Padding="12,10,12,10"
+                            BorderThickness="1" BorderBrush="#306E45FF"
+                            Background="#106E45FF">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE721;" FontSize="16"
+                                      Foreground="#FF8B65FF" VerticalAlignment="Center" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="STORE SEARCH"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#FF8B65FF"
+                                           CharacterSpacing="100" />
+                                <TextBlock Text="Steam catalog lookup"
+                                           FontSize="10" Opacity="0.65"
+                                           Foreground="#FFEDEDF5" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" CornerRadius="10" Padding="12,10,12,10"
+                            BorderThickness="1" BorderBrush="#303B6BFF"
+                            Background="#103B6BFF">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8AB;" FontSize="16"
+                                      Foreground="#FF5B7FFF" VerticalAlignment="Center" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="INSTALLED"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#FF5B7FFF"
+                                           CharacterSpacing="100" />
+                                <TextBlock Text="Local appmanifest scan"
+                                           FontSize="10" Opacity="0.65"
+                                           Foreground="#FFEDEDF5" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" CornerRadius="10" Padding="12,10,12,10"
+                            BorderThickness="1" BorderBrush="#307DD3A0"
+                            Background="#107DD3A0">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8F1;" FontSize="16"
+                                      Foreground="#FF7DD3A0" VerticalAlignment="Center" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="LIBRARY"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#FF7DD3A0"
+                                           CharacterSpacing="100" />
+                                <TextBlock Text="Tracked manifests"
+                                           FontSize="10" Opacity="0.65"
+                                           Foreground="#FFEDEDF5" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ──────── SOURCE + SEARCH ROW ──────── -->
+        <Border
+                Padding="14,10"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource ManifestCardCornerRadius}">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox
+                    x:Name="SourceCombo"
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="SourceCombo_SelectionChanged">
+
+                    <ComboBoxItem Tag="store">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon FontSize="13" Glyph="&#xE721;" VerticalAlignment="Center" />
+                            <TextBlock VerticalAlignment="Center" Text="Steam Store" />
+                        </StackPanel>
+                    </ComboBoxItem>
+                    <ComboBoxItem Tag="installed">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon FontSize="13" Glyph="&#xE8AB;" VerticalAlignment="Center" />
+                            <TextBlock VerticalAlignment="Center" Text="Installed on this PC" />
+                        </StackPanel>
+                    </ComboBoxItem>
+                    <ComboBoxItem Tag="library">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon FontSize="13" Glyph="&#xE8F1;" VerticalAlignment="Center" />
+                            <TextBlock VerticalAlignment="Center" Text="My manifest library" />
+                        </StackPanel>
+                    </ComboBoxItem>
+                </ComboBox>
+
+                <AutoSuggestBox
+                    x:Name="SearchBox"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    PlaceholderText="Search the Steam Store, or paste an App ID…"
+                    QueryIcon="Find"
+                    KeyboardAcceleratorPlacementMode="Hidden"
+                    QuerySubmitted="SearchBox_QuerySubmitted">
+                    <AutoSuggestBox.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="FocusSearch_Accelerator" />
+                    </AutoSuggestBox.KeyboardAccelerators>
+                </AutoSuggestBox>
+
+                <Button
+                    x:Name="RefreshInstalledButton"
+                    Grid.Column="2"
+                    MinHeight="32"
+                    Padding="14,6"
+                    Click="RefreshInstalled_Click"
+                    Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <FontIcon FontSize="12" Glyph="&#xE72C;" />
+                        <TextBlock Text="Refresh" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Steam path banner -->
+        <InfoBar
+            x:Name="SteamPathBanner"
+            CornerRadius="{StaticResource ControlCornerRadius}"
+            IsClosable="False"
+            IsOpen="True"
+            Message="Steam install path not detected. Set it in Settings so manifests can deploy to plugin/depotcache folders."
+            Severity="Informational"
+            Visibility="Collapsed" />
+
+        <!-- ──────── RESULTS ──────── -->
+        <TextBlock x:Name="ResultsHeading"
+                   FontSize="13"
+                   FontWeight="SemiBold"
+                   CharacterSpacing="120"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <GridView
+                x:Name="GamesGrid"
+                HorizontalAlignment="Stretch"
+                MinHeight="200"
+                IsItemClickEnabled="True"
+                SelectionMode="None"
+                ItemClick="GamesGrid_ItemClick"
+                ScrollViewer.VerticalScrollMode="Disabled"
+                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                ScrollViewer.HorizontalScrollMode="Disabled"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                <GridView.ItemContainerStyle>
+                    <Style TargetType="GridViewItem">
+                        <Setter Property="Margin" Value="0,0,14,14" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="MinWidth" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </GridView.ItemContainerStyle>
+
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="local:GameRowVm">
+                        <Border
+                            Width="224"
+                            Padding="0,0,0,12"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource ManifestCardCornerRadius}">
+                            <StackPanel Spacing="10">
+
+                                <Border Height="105"
+                                        CornerRadius="10,10,0,0"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                    <Grid>
+                                        <Image Stretch="UniformToFill">
+                                            <Image.Source>
+                                                <!-- DecodePixelWidth=448 (2x for HiDPI) so we don't keep
+                                                     460x215 header_image bitmaps fully decoded in memory. -->
+                                                <BitmapImage UriSource="{x:Bind ThumbUri, Mode=OneWay}"
+                                                             DecodePixelType="Logical"
+                                                             DecodePixelWidth="224" />
+                                            </Image.Source>
+                                        </Image>
+
+                                        <Border
+                                            Margin="8"
+                                            Padding="7,3,7,4"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                            CornerRadius="0"
+                                            Visibility="{x:Bind IsConfigured, Mode=OneWay, Converter={StaticResource ManifestBoolToVisibility}}">
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="SemiBold"
+                                                CharacterSpacing="80"
+                                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                Text="TRACKED" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel Padding="12,0,12,0" Spacing="3">
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Text="{x:Bind DisplayName}"
+                                        MaxLines="2"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWholeWords" />
+
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind AppIdFormatted}" />
+
+                                    <TextBlock
+                                        MaxLines="2"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Text="{x:Bind TrackingSubtitleLine, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="WrapWholeWords"
+                                        Visibility="{x:Bind TrackingSubtitleLine, Mode=OneWay, Converter={StaticResource ManifestNonEmptyToVisibility}}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+    </StackPanel>
+    </ScrollViewer>
+</Page>

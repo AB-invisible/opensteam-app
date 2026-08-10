@@ -1,0 +1,7 @@
+<Project>
+  <!-- WinUI/WASDK: avoid AnyCPU/neutral combinations that break packaging targets -->
+  <PropertyGroup>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+</Project>

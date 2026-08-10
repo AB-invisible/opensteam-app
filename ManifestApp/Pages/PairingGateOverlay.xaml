@@ -1,0 +1,32 @@
+<UserControl
+    x:Class="ManifestApp.Pages.PairingGateOverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ManifestApp.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource OpenSteamHeroSurfaceBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,24">
+            <Border
+                MaxWidth="720"
+                Margin="0,24,0,32"
+                Padding="24,22"
+                HorizontalAlignment="Center"
+                CornerRadius="14"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Pair your PC with Discord to unlock OpenSteam. The rest of the app stays locked until your API key is saved."
+                        TextWrapping="WrapWholeWords" />
+                    <controls:PairingPanel x:Name="PairingPanel" />
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
