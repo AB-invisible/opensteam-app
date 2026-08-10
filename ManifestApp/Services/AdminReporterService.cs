@@ -7,12 +7,12 @@ namespace ManifestApp.Services;
 
 /// <summary>
 /// Fire-and-forget telemetry reporter.  Posts session heartbeats and user events
-/// to the OpenSteam server (POST /api/report, configured via AdminEndpointUrl).
-/// If the endpoint is empty or unreachable the call is silently dropped.
+/// to the OpenSteam server (POST /api/report).
+/// Uses AdminEndpointUrl when set, otherwise falls back to OpenSteamApiBaseUrl.
 /// </summary>
 public sealed class AdminReporterService(HttpClient http, SettingsStore settingsStore)
 {
-    private static readonly string SessionId = Guid.NewGuid().ToString("N");
+    private static readonly string SessionId = Guid.NewGuid().ToString();
     private static readonly string AppVersion =
         typeof(AdminReporterService).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
@@ -47,7 +47,10 @@ public sealed class AdminReporterService(HttpClient http, SettingsStore settings
         bool?   success  = null,
         string? detail   = null)
     {
-        var endpoint = settingsStore.Load().AdminEndpointUrl?.Trim().TrimEnd('/');
+        var settings = settingsStore.Load();
+        var endpoint = settings.AdminEndpointUrl?.Trim().TrimEnd('/');
+        if (string.IsNullOrEmpty(endpoint))
+            endpoint = OpenSteamApiEndpoint.ResolvePrimary(settingsStore).Trim().TrimEnd('/');
         if (string.IsNullOrEmpty(endpoint))
             return;
 
